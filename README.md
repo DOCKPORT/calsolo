@@ -13,6 +13,9 @@ A standalone terminal-style calculator with a dark theme, built with **PySide6**
 - Dark terminal-inspired theme
 - Scale-factor support for high-DPI displays
 
+- ## Screenshot
+![Calsolo Calculator](Screenshot_2026-06-02_03-20-54.png)
+
 ## Dependencies
 
 - Python 3.10+

@@ -10,6 +10,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QShortcut, QScreen
 
 from version import VERSION
+from icon import get_app_icon
 from colors import (
     BG,
     OUTPUT_BG,
@@ -115,6 +116,7 @@ class CalculatorWindow(QDialog):
         self.s = lambda val: int(val * self.scale_factor)
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.setWindowTitle(f"Calsolo {VERSION}")
+        self.setWindowIcon(get_app_icon())
         self.setMinimumSize(self.s(500), self.s(600))
 
         self._apply_stylesheet()

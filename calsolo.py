@@ -204,10 +204,13 @@ class CalculatorWindow(QDialog):
         self.engine.clear_vars()
 
     def _format_result(self, val: float | int) -> str:
-        """Format a numeric result nicely."""
+        """Format a numeric result nicely — no scientific notation."""
         if isinstance(val, float):
-            # Strip trailing zeros
-            s = f"{val:g}"
+            # Whole number → show as integer
+            if val == int(val):
+                return str(int(val))
+            # Otherwise show up to 10 decimal places, strip trailing zeros
+            s = f"{val:.10f}".rstrip("0").rstrip(".")
             return s
         return str(val)
 

@@ -3,22 +3,26 @@ import sys
 import os
 import importlib.util
 
-# Load the Rust calc_engine.
-# Prefer a pip-installed copy; fall back to the local build directory.
-_engine_so = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "calc_engine", "target", "release", "lib_calc_rs.so",
-)
-try:
-    from _calc_rs import CalcEngine
-except ModuleNotFoundError:
-    if os.path.exists(_engine_so):
-        _spec = importlib.util.spec_from_file_location("_calc_rs", _engine_so)
-        _mod = importlib.util.module_from_spec(_spec)
-        _spec.loader.exec_module(_mod)
-        CalcEngine = _mod.CalcEngine
-    else:
-        raise
+
+def _load_calc_engine():
+    """Import CalcEngine, preferring pip-installed, falling back to local build."""
+    try:
+        from _calc_rs import CalcEngine
+        return CalcEngine
+    except ModuleNotFoundError:
+        so_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "calc_engine", "target", "release", "lib_calc_rs.so",
+        )
+        if not os.path.exists(so_path):
+            raise
+        spec = importlib.util.spec_from_file_location("_calc_rs", so_path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.CalcEngine
+
+
+CalcEngine = _load_calc_engine()
 from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPlainTextEdit, QLineEdit, QPushButton, QApplication,

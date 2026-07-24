@@ -1,7 +1,6 @@
-import math
 import re
 import sys
-from asteval import Interpreter
+from _calc_rs import CalcEngine
 from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPlainTextEdit, QLineEdit, QPushButton, QApplication,
@@ -89,17 +88,10 @@ STYLESHEET_TEMPLATE = """
 """
 
 
-BUILTIN_VARS = {
-    'sqrt': math.sqrt, 'abs': abs, 'round': round,
-    'pi': math.pi, 'e': math.e, 'pow': pow,
-    'sin': math.sin, 'cos': math.cos, 'tan': math.tan,
-}
-
-
 class CalculatorWindow(QDialog):
     """
     A standalone window for the Terminal Calculator.
-    Uses asteval for safe math expression evaluation.
+    Uses the Rust calc_engine for safe math expression evaluation.
     """
     def __init__(self, parent=None, scale_factor=None):
         """Standalone Terminal Calculator Window."""
@@ -154,8 +146,8 @@ class CalculatorWindow(QDialog):
         # Ctrl+L shortcut for Clear
         QShortcut(Qt.Key.Key_L | Qt.Modifier.CTRL, self, self._clear_history)
 
-        # Safe math interpreter
-        self.interp = Interpreter(usersyms=BUILTIN_VARS.copy())
+        # Rust calc engine
+        self.engine = CalcEngine()
 
     def _apply_stylesheet(self):
         s = self.s
@@ -186,12 +178,14 @@ class CalculatorWindow(QDialog):
 
     def _clear_history(self):
         self.calc_history.clear()
-        self.interp = Interpreter(usersyms=BUILTIN_VARS.copy())
+        self.engine.clear_vars()
 
     def _format_result(self, val: float | int) -> str:
         """Format a numeric result nicely."""
         if isinstance(val, float):
-            return f"{val:g}"
+            # Strip trailing zeros
+            s = f"{val:g}"
+            return s
         return str(val)
 
     def _on_calc_enter(self):
@@ -203,10 +197,7 @@ class CalculatorWindow(QDialog):
 
         # Special vars command
         if text.lower() == 'vars':
-            user_vars = {
-                k: v for k, v in self.interp.symtable.items()
-                if not callable(v) and k != '__builtins__'
-            }
+            user_vars = self.engine.get_all_vars()
             if user_vars:
                 for k, v in user_vars.items():
                     self.calc_history.appendPlainText(f"  {k} = {self._format_result(v)}")
@@ -218,34 +209,19 @@ class CalculatorWindow(QDialog):
 
         try:
             # Handle percentage: convert standalone "50%" → "50/100"
-            # but leave "10 % 3" (modulo) alone
-            # Only match percent at end of a number
             if '%' in text:
                 processed = re.sub(r'(\d+(?:\.\d+)?)%', r'(\1)/100', text)
             else:
                 processed = text
 
-            result = self.interp(processed)
+            result = self.engine.eval(processed)
 
-            # asteval returns None for assignment statements
-            if result is None:
-                # Check if this was an assignment by looking for '='
-                if '=' in text:
-                    var_name = text.split('=', 1)[0].strip()
-                    if var_name in self.interp.symtable:
-                        val = self.interp.symtable[var_name]
-                        self.calc_history.appendPlainText(
-                            f"  {var_name} = {self._format_result(val)}"
-                        )
-            else:
-                self.calc_history.appendPlainText(f"  = {self._format_result(result)}")
+            # The Rust engine returns the value for assignments too —
+            # no need for the None check like asteval
+            self.calc_history.appendPlainText(f"  = {self._format_result(result)}")
 
         except Exception as e:
             msg = str(e)
-            # Clean up asteval's verbose error messages
-            if msg.startswith("NameError: name '") and msg.endswith("' is not defined"):
-                
-                pass
             self.calc_history.appendPlainText(f"  Error: {msg}")
 
         self.calc_input.clear()

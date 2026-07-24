@@ -1,4 +1,4 @@
-//! Safe expression evaluator for DockPort CLI calculator.
+//! Safe expression evaluator for Calsolo.
 //!
 //! Tokenizes, parses, and evaluates arithmetic expressions with variables.
 //! No system calls, no file I/O, no code execution — pure math only.
@@ -454,6 +454,11 @@ impl CalcEngine {
     /// Get the value of a variable, or None if not set.
     fn get_var(&self, name: &str) -> Option<f64> {
         self.vars.get(name).copied()
+    }
+
+    /// Get all variables as a dict of name → value.
+    fn get_all_vars(&self) -> HashMap<String, f64> {
+        self.vars.clone()
     }
 }
 

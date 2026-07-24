@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (  # noqa: E402
     QLabel, QPlainTextEdit, QLineEdit, QPushButton, QApplication,
 )
 from PySide6.QtCore import Qt  # noqa: E402
-from PySide6.QtGui import QShortcut, QScreen  # noqa: E402
+from PySide6.QtGui import QShortcut  # noqa: E402
 
 from version import VERSION  # noqa: E402
 from icon import get_app_icon  # noqa: E402

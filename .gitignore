@@ -28,3 +28,25 @@ Binary/dist/
 Binary/build/
 *.AppDir/
 *.AppImage
+
+# Rust: library crates should not commit Cargo.lock
+calc_engine/Cargo.lock
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Compiled native extensions (maturin builds)
+calc_engine/*.so
+calc_engine/*.dylib
+
+# Cache / coverage
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environment variables
+.env

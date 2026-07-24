@@ -2,6 +2,8 @@
 
 A standalone terminal-style calculator with a dark theme, powered by a **Rust** calculation engine (`calc_engine`) via PyO3.
 
+![Calsolo Screenshot](Screenshot/Screenshot_2026-07-24_18-19-49.png)
+
 ## Features
 
 - Safe expression evaluation using a Rust backend — no system calls, no file I/O, pure math only

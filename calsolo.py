@@ -258,7 +258,81 @@ class CalculatorWindow(QDialog):
         self.calc_input.setFocus()
 
 
+# ---------------------------------------------------------------------------
+# Desktop entry installation (runs once on first launch)
+# ---------------------------------------------------------------------------
+
+def _install_desktop_entry() -> None:
+    """Create a .desktop file and icon for the system launcher.
+
+    Detects whether the app is running from an AppImage or from source,
+    then installs the appropriate launcher at
+    ``~/.local/share/applications/Calsolo.desktop``.
+    Only runs if the file does not already exist.
+    """
+    desktop_path = os.path.expanduser(
+        "~/.local/share/applications/Calsolo.desktop",
+    )
+    if os.path.exists(desktop_path):
+        return
+
+    icon_dir = os.path.expanduser(
+        "~/.local/share/icons/hicolor/scalable/apps",
+    )
+    icon_dst = os.path.join(icon_dir, "calsolo.svg")
+    os.makedirs(icon_dir, exist_ok=True)
+
+    # Determine the binary path and icon source
+    appimage = os.environ.get("APPIMAGE")
+    if appimage:
+        # Running inside an AppImage — the icon is bundled in the extracted dir
+        icon_src = os.path.join(os.path.dirname(sys.executable), "calsolo.svg")
+        exec_line = appimage
+        try:
+            import shutil
+            shutil.copy2(icon_src, icon_dst)
+        except Exception:
+            pass
+    else:
+        # Running from source
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        icon_src = os.path.join(script_dir, "calsolo.svg")
+        exec_line = f"{sys.executable} {os.path.join(script_dir, 'calsolo.py')}"
+        try:
+            import shutil
+            shutil.copy2(icon_src, icon_dst)
+        except Exception:
+            pass
+
+    # Write the .desktop file
+    os.makedirs(os.path.dirname(desktop_path), exist_ok=True)
+    with open(desktop_path, "w") as f:
+        f.write(f"""[Desktop Entry]
+Version={VERSION}
+Name=Calsolo
+Comment=Terminal Calculator
+Exec={exec_line}
+Path={os.path.dirname(os.path.abspath(__file__))}
+Icon=calsolo
+Type=Application
+Categories=Finance;Utility;
+Terminal=false
+StartupNotify=false
+""")
+
+    # Refresh the desktop database
+    try:
+        import subprocess
+        subprocess.run(
+            ["update-desktop-database", os.path.dirname(desktop_path)],
+            capture_output=True,
+        )
+    except Exception:
+        pass
+
+
 def main():
+    _install_desktop_entry()
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
     win = CalculatorWindow()

@@ -21,3 +21,10 @@ Thumbs.db
 # Generated / design assets (not source)
 logo.html
 Logo.pdf
+
+# AppImage build artifacts
+Binary/appimagetool
+Binary/dist/
+Binary/build/
+*.AppDir/
+*.AppImage

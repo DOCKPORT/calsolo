@@ -23,16 +23,17 @@ def _load_calc_engine():
 
 
 CalcEngine = _load_calc_engine()
-from PySide6.QtWidgets import (
+
+from PySide6.QtWidgets import (  # noqa: E402
     QDialog, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPlainTextEdit, QLineEdit, QPushButton, QApplication,
 )
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QShortcut, QScreen
+from PySide6.QtCore import Qt  # noqa: E402
+from PySide6.QtGui import QShortcut, QScreen  # noqa: E402
 
-from version import VERSION
-from icon import get_app_icon
-from colors import (
+from version import VERSION  # noqa: E402
+from icon import get_app_icon  # noqa: E402
+from colors import (  # noqa: E402
     BG,
     OUTPUT_BG,
     DIALOG_BORDER,

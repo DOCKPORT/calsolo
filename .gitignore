@@ -22,10 +22,8 @@ Thumbs.db
 logo.html
 Logo.pdf
 
-# AppImage build artifacts
-Binary/appimagetool
-Binary/dist/
-Binary/build/
+# Binary build artifacts (only source code tracked in repo)
+Binary/
 *.AppDir/
 *.AppImage
 

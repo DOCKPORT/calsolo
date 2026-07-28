@@ -1,7 +1,7 @@
+import importlib.util
+import os
 import re
 import sys
-import os
-import importlib.util
 
 
 def _load_calc_engine():
@@ -24,26 +24,37 @@ def _load_calc_engine():
 
 CalcEngine = _load_calc_engine()
 
-from PySide6.QtWidgets import (  # noqa: E402
-    QDialog, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPlainTextEdit, QLineEdit, QPushButton, QApplication,
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QShortcut
+from PySide6.QtWidgets import (
+    QApplication,
+    QDialog,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPlainTextEdit,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtCore import Qt  # noqa: E402
-from PySide6.QtGui import QShortcut  # noqa: E402
 
-from version import VERSION  # noqa: E402
-from icon import get_app_icon  # noqa: E402
-from colors import (  # noqa: E402
+from colors import (
     BG,
-    OUTPUT_BG,
+    BUTTON_BORDER,
+    BUTTON_HOVER_TEXT,
+    BUTTON_TEXT,
     DIALOG_BORDER,
+    INPUT_BORDER,
+    INPUT_TEXT,
     LABEL_TEXT,
-    OUTPUT_TEXT, OUTPUT_BORDER,
-    INPUT_TEXT, INPUT_BORDER,
-    BUTTON_TEXT, BUTTON_BORDER, BUTTON_HOVER_TEXT,
-    SCROLLBAR_HANDLE, SCROLLBAR_HANDLE_HOVER,
+    OUTPUT_BG,
+    OUTPUT_BORDER,
+    OUTPUT_TEXT,
+    SCROLLBAR_HANDLE,
+    SCROLLBAR_HANDLE_HOVER,
 )
-
+from icon import get_app_icon
+from version import VERSION
 
 STYLESHEET_TEMPLATE = """
     QDialog {{
@@ -203,7 +214,7 @@ class CalculatorWindow(QDialog):
         self.calc_history.clear()
         self.engine.clear_vars()
 
-    def _format_result(self, val: float | int) -> str:
+    def _format_result(self, val: float) -> str:
         """Format a numeric result nicely — no scientific notation."""
         if isinstance(val, float):
             # Whole number → show as integer
@@ -246,7 +257,7 @@ class CalculatorWindow(QDialog):
             # no need for the None check like asteval
             self.calc_history.appendPlainText(f"  = {self._format_result(result)}")
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 — intentionally catch all errors to display in GUI
             msg = str(e)
             self.calc_history.appendPlainText(f"  Error: {msg}")
 
@@ -270,6 +281,9 @@ def _install_desktop_entry() -> None:
     ``~/.local/share/applications/Calsolo.desktop``.
     Only runs if the file does not already exist.
     """
+    import shutil
+    import subprocess
+
     desktop_path = os.path.expanduser(
         "~/.local/share/applications/Calsolo.desktop",
     )
@@ -289,9 +303,8 @@ def _install_desktop_entry() -> None:
         icon_src = os.path.join(os.path.dirname(sys.executable), "calsolo.svg")
         exec_line = appimage
         try:
-            import shutil
             shutil.copy2(icon_src, icon_dst)
-        except Exception:
+        except Exception:  # noqa: BLE001, S110 — non-critical, skip icon if copy fails
             pass
     else:
         # Running from source
@@ -299,9 +312,8 @@ def _install_desktop_entry() -> None:
         icon_src = os.path.join(script_dir, "calsolo.svg")
         exec_line = f"{sys.executable} {os.path.join(script_dir, 'calsolo.py')}"
         try:
-            import shutil
             shutil.copy2(icon_src, icon_dst)
-        except Exception:
+        except Exception:  # noqa: BLE001, S110 — non-critical, skip icon if copy fails
             pass
 
     # Write the .desktop file
@@ -322,12 +334,12 @@ StartupNotify=false
 
     # Refresh the desktop database
     try:
-        import subprocess
         subprocess.run(
             ["update-desktop-database", os.path.dirname(desktop_path)],
             capture_output=True,
+            check=False,
         )
-    except Exception:
+    except Exception:  # noqa: BLE001, S110 — non-critical, skip desktop db refresh if fails
         pass
 
 

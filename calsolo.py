@@ -290,33 +290,35 @@ def _install_desktop_entry() -> None:
     if os.path.exists(desktop_path):
         return
 
-    icon_dir = os.path.expanduser(
-        "~/.local/share/icons/hicolor/scalable/apps",
-    )
-    icon_dst = os.path.join(icon_dir, "calsolo.svg")
+    # Store the icon directly in ~/.local/share/icons (no hicolor theme folders).
+    icon_dir = os.path.expanduser("~/.local/share/icons")
+    icon_name = "calsolo.svg"
+    icon_dst = os.path.join(icon_dir, icon_name)
+    icon_path = icon_dst
     os.makedirs(icon_dir, exist_ok=True)
 
     # Determine the binary path and icon source
     appimage = os.environ.get("APPIMAGE")
     if appimage:
         # Running inside an AppImage — the icon is bundled in the extracted dir
-        icon_src = os.path.join(os.path.dirname(sys.executable), "calsolo.svg")
+        icon_src = os.path.join(os.path.dirname(sys.executable), icon_name)
         exec_line = appimage
         try:
             shutil.copy2(icon_src, icon_dst)
-        except Exception:  # noqa: BLE001, S110 — non-critical, skip icon if copy fails
-            pass
+        except Exception as e:  # noqa: BLE001 — non-critical, warn instead of fail
+            print(f"Warning: could not copy icon to {icon_dst}: {e}")
     else:
         # Running from source
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        icon_src = os.path.join(script_dir, "calsolo.svg")
+        icon_src = os.path.join(script_dir, icon_name)
         exec_line = f"{sys.executable} {os.path.join(script_dir, 'calsolo.py')}"
         try:
             shutil.copy2(icon_src, icon_dst)
-        except Exception:  # noqa: BLE001, S110 — non-critical, skip icon if copy fails
-            pass
+        except Exception as e:  # noqa: BLE001 — non-critical, warn instead of fail
+            print(f"Warning: could not copy icon to {icon_dst}: {e}")
 
-    # Write the .desktop file
+    # Write the .desktop file, referencing the icon by absolute path
+    # so the launcher finds it without a theme lookup.
     os.makedirs(os.path.dirname(desktop_path), exist_ok=True)
     with open(desktop_path, "w") as f:
         f.write(f"""[Desktop Entry]
@@ -325,7 +327,7 @@ Name=Calsolo
 Comment=Terminal Calculator
 Exec={exec_line}
 Path={os.path.dirname(os.path.abspath(__file__))}
-Icon=calsolo
+Icon={icon_path}
 Type=Application
 Categories=Finance;Utility;
 Terminal=false

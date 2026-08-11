@@ -53,7 +53,7 @@ from colors import (
     SCROLLBAR_HANDLE,
     SCROLLBAR_HANDLE_HOVER,
 )
-from icon import get_app_icon
+from icon import SVG_LOGO, get_app_icon
 from version import VERSION
 
 STYLESHEET_TEMPLATE = """
@@ -281,7 +281,6 @@ def _install_desktop_entry() -> None:
     ``~/.local/share/applications/Calsolo.desktop``.
     Only runs if the file does not already exist.
     """
-    import shutil
     import subprocess
 
     desktop_path = os.path.expanduser(
@@ -292,30 +291,27 @@ def _install_desktop_entry() -> None:
 
     # Store the icon directly in ~/.local/share/icons (no hicolor theme folders).
     icon_dir = os.path.expanduser("~/.local/share/icons")
-    icon_name = "calsolo.svg"
-    icon_dst = os.path.join(icon_dir, icon_name)
+    icon_dst = os.path.join(icon_dir, "calsolo.svg")
     icon_path = icon_dst
     os.makedirs(icon_dir, exist_ok=True)
 
-    # Determine the binary path and icon source
+    # Determine the binary path and build the Exec line.
     appimage = os.environ.get("APPIMAGE")
     if appimage:
-        # Running inside an AppImage — the icon is bundled in the extracted dir
-        icon_src = os.path.join(os.path.dirname(sys.executable), icon_name)
         exec_line = appimage
-        try:
-            shutil.copy2(icon_src, icon_dst)
-        except Exception as e:  # noqa: BLE001 — non-critical, warn instead of fail
-            print(f"Warning: could not copy icon to {icon_dst}: {e}")
     else:
         # Running from source
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        icon_src = os.path.join(script_dir, icon_name)
         exec_line = f"{sys.executable} {os.path.join(script_dir, 'calsolo.py')}"
-        try:
-            shutil.copy2(icon_src, icon_dst)
-        except Exception as e:  # noqa: BLE001 — non-critical, warn instead of fail
-            print(f"Warning: could not copy icon to {icon_dst}: {e}")
+
+    # Write the icon from the embedded SVG logo.
+    # Avoids depending on a packaged .svg file, which is never bundled
+    # into the AppImage bundle.
+    try:
+        with open(icon_dst, "w") as f:
+            f.write(SVG_LOGO)
+    except Exception as e:  # noqa: BLE001 — non-critical, warn instead of fail
+        print(f"Warning: could not write icon to {icon_dst}: {e}")
 
     # Write the .desktop file, referencing the icon by absolute path
     # so the launcher finds it without a theme lookup.
